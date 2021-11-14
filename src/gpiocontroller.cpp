@@ -1,6 +1,6 @@
 #include "gpiocontroller.h"
 #include "localstorage.h"
-
+#include "debugutils.h"
 
 GPIOController::GPIOController()
 {
@@ -8,7 +8,7 @@ GPIOController::GPIOController()
 
 GPIOController::GPIOError GPIOController::configurePin(int id, GPIOController::PinMode mode)
 {
-    Serial.println(String("Configuring Pin ") + id + " as " + mode);
+    DebugPrintln(String("Configuring Pin ") + id + " as " + mode);
     switch (mode) {
     case PinModeGPIOInput:
         pinMode(id, INPUT);
@@ -130,7 +130,7 @@ GPIOController::GPIOError GPIOController::setWs2812Brightness(int id, int bright
     if (m_pinModes[id] != PinModeWS2812) {
         return GPIOErrorConfigurationMismatch;
     }
-    Serial.println(String("Setting ws2812 brightness: ") + brightness);
+    DebugPrintln(String("Setting ws2812 brightness: ") + brightness);
     WS2812FX *ws2812fx = m_ws2812map[id];
     if (!ws2812fx) {
         return GPIOErrorUnconfigured;
@@ -157,7 +157,7 @@ GPIOController::GPIOError GPIOController::setWs2812Color(int id, int color)
     if (!ws2812fx) {
         return GPIOErrorUnconfigured;;
     }
-//    Serial.println(String("Setting ws2812 color: ") + color);
+//    DebugPrintln(String("Setting ws2812 color: ") + color);
     ws2812fx->setColor(color);
     ws2812fx->setMode(FX_MODE_STATIC);
 //    ws2812fx->setMode(effect);
@@ -178,10 +178,10 @@ void GPIOController::loop()
         if (m_pinModes[pin] == PinModeGPIOInput) {
             int state = digitalRead(pin);
             if (state != m_inputStates[pin]) {
-                Serial.println(String("Pin ") + pin + " state changed: " + state);
+                DebugPrintln(String("Pin ") + pin + " state changed: " + state);
                 m_inputStates[pin] = state;
-                for (int j = 0; j < m_powerChangedHandlers.length(); j++) {
-                    Serial.println("Calling callback");
+                for (unsigned int j = 0; j < m_powerChangedHandlers.length(); j++) {
+                    DebugPrintln("Calling callback");
                     m_powerChangedHandlers[j](pin, state == HIGH);
                 }
             }

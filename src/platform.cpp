@@ -1,4 +1,6 @@
 #include "platform.h"
+#include "debugutils.h"
+#include "owlet.h"
 
 Platform::Platform()
 {
@@ -30,7 +32,15 @@ String Platform::type() const
     return "ESP32";
 #elif defined ESP8266
     return "ESP8266";
-#endif
+#elif defined ARDUINO_UNO
+    return "Arduino Uno";
+#elif defined ARDUINO_MINI_PRO
+    return "Arduino Mini Pro";
+#endif 
     return "Unknown";
+}
 
+String Platform::firmwareVersion() const
+{
+    return FIRMWARE_VERSION;
 }

@@ -19,6 +19,7 @@ public:
     enum GPIOError {
         GPIOErrorNoError,
         GPIOErrorUnconfigured,
+        GPIOErrorUnsupported,
         GPIOErrorConfigurationMismatch
     };
 

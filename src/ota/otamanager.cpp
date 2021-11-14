@@ -1,4 +1,6 @@
 #include "otamanager.h"
+#include "debugutils.h"
+
 #define NO_GLOBAL_INSTANCES
 
 #ifdef ESP32
@@ -47,19 +49,19 @@ void OTAManager::update(const String &url)
     d->ota->setLedPin(LED_BUILTIN, LOW);
     // Add optional callback notifiers
     d->ota->onStart([](){
-      Serial.println("Update started");
+      DebugPrintln("Update started");
     });
     d->ota->onEnd([](){
-      Serial.println("Update finished");
+      DebugPrintln("Update finished");
     });
     d->ota->onProgress([](int cur, int total){
-      Serial.print("Update progress: ");
-      Serial.print(cur);
-      Serial.print(" of ");
-      Serial.println(total);
+      DebugPrint("Update progress: ");
+      DebugPrint(cur);
+      DebugPrint(" of ");
+      DebugPrintln(total);
     });
     d->ota->onError([](int error){
-      Serial.println("Update error: " + error);
+      DebugPrintln("Update error: " + error);
     });
 #endif
 
@@ -76,15 +78,15 @@ void OTAManager::loop()
 
         switch(ret) {
             case HTTP_UPDATE_FAILED:
-                Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s", d->ota->getLastError(), d->ota->getLastErrorString().c_str());
+                DebugPrintf("HTTP_UPDATE_FAILD Error (%d): %s", d->ota->getLastError(), d->ota->getLastErrorString().c_str());
                 break;
 
             case HTTP_UPDATE_NO_UPDATES:
-                Serial.println("HTTP_UPDATE_NO_UPDATES");
+                DebugPrintln("HTTP_UPDATE_NO_UPDATES");
                 break;
 
             case HTTP_UPDATE_OK:
-                Serial.println("HTTP_UPDATE_OK");
+                DebugPrintln("HTTP_UPDATE_OK");
                 break;
         }
 
@@ -93,7 +95,7 @@ void OTAManager::loop()
         int ret = d->ota->update(*d->wifiClient, d->pendingOta);
         switch (ret) {
           case HTTP_UPDATE_FAILED:
-            Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", d->ota->getLastError(), d->ota->getLastErrorString().c_str());
+            DebugPrintf("HTTP_UPDATE_FAILD Error (%d): %s\n", d->ota->getLastError(), d->ota->getLastErrorString().c_str());
             delete d->ota;
             delete d->wifiClient;
             break;
@@ -101,11 +103,11 @@ void OTAManager::loop()
           case HTTP_UPDATE_NO_UPDATES:
             delete d->ota;
             delete d->wifiClient;
-            Serial.println("HTTP_UPDATE_NO_UPDATES");
+            DebugPrintln("HTTP_UPDATE_NO_UPDATES");
             break;
 
           case HTTP_UPDATE_OK:
-            Serial.println("HTTP_UPDATE_OK");
+            DebugPrintln("HTTP_UPDATE_OK");
             break;
         }
 #endif

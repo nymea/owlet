@@ -1,5 +1,6 @@
 #include "wifimanager.h"
 #include "localstorage.h"
+#include "debugutils.h"
 
 #include <Arduino.h>
 #ifdef ESP32
@@ -34,8 +35,8 @@ void WiFiManager::begin()
     WiFiConfig wifiConfig = loadWiFiConfig();
     bool wifiConnected = false;
     if (wifiConfig.valid) {
-        Serial.print("Loaded wifi ssid: ");
-        Serial.println(wifiConfig.ssid);
+        DebugPrint("Loaded wifi ssid: ");
+        DebugPrintln(wifiConfig.ssid);
         wifiConnected = connectToWiFi(wifiConfig);
     }
 
@@ -67,22 +68,22 @@ String WiFiManager::ip() const
 bool WiFiManager::connectToWiFi(WiFiConfig wifiConfig)
 {
     WiFi.mode(WIFI_STA);
-    Serial.print("Connecting to WiFi network ");
-    Serial.println(wifiConfig.ssid);
+    DebugPrint("Connecting to WiFi network ");
+    DebugPrintln(wifiConfig.ssid);
     WiFi.begin(wifiConfig.ssid.c_str(), wifiConfig.password.c_str());
 
     for (int i = 0; WiFi.status() != WL_CONNECTED && i < 30; i++) {
         delay(500);
-        Serial.print(".");
+        DebugPrint(".");
     }
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("Failed to connect to WiFi");
+        DebugPrintln("Failed to connect to WiFi");
         return false;
     }
-    Serial.print("Connected to WiFi ");
-    Serial.print(wifiConfig.ssid);
-    Serial.print(". IP address: ");
-    Serial.println(WiFi.localIP());
+    DebugPrint("Connected to WiFi ");
+    DebugPrint(wifiConfig.ssid);
+    DebugPrint(". IP address: ");
+    DebugPrintln(WiFi.localIP());
     return true;
 }
 
@@ -99,10 +100,10 @@ WiFiManager::WiFiConfig WiFiManager::loadWiFiConfig() const
         config.ssid = ssid;
         const char *password = json["password"];
         config.password = password;
-        Serial.println(String("Loaded wifi config: ") + (config.ap ? "AP" : "Client") + " SSID: " + config.ssid + ", Pass: " + config.password);
+        DebugPrintln(String("Loaded wifi config: ") + (config.ap ? "AP" : "Client") + " SSID: " + config.ssid + ", Pass: " + config.password);
         config.valid = true;
     } else {
-        Serial.println("failed to load json config");
+        DebugPrintln("failed to load json config");
     }
 
     return config;

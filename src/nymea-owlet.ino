@@ -2,13 +2,18 @@
 
 */
 
+#ifndef __UNO__
 #define NO_GLOBAL_INSTANCES
+#endif
 
+#include <Arduino.h>
 #include "gpiocontroller.h"
 #include "platform.h"
-
+#include "debugutils.h"
+#include "owlet.h"
 #include "api/apiserver.h"
 #include "api/gpiohandler.h"
+#include "api/platformhandler.h"
 
 #ifdef USE_M5STICKC
     #include "m5stickc/m5stickchelper.h"
@@ -32,14 +37,23 @@
     OTAManager otaManager;
 #endif
 
-#define VERSION "0.0.1"
-
+APIServer *apiServer;
 GPIOController gpioController;
 
+#ifdef USE_UART_TRANSPORT
+    #include "uart/serialtransport.h"
+    SerialTransport *serialTransport;
+#endif
 
-void setup() {
+
+void setup() 
+{
+
+//#ifndef USE_UART_TRANSPORT
     Serial.begin(115200);
-//    printWelcome();
+    DebugPrintln("Setup");
+//#endif
+
 
 #ifdef USE_M5STICKC
     M5StickCHelper *m5StickCHelper = new M5StickCHelper();
@@ -52,19 +66,21 @@ void setup() {
     m5StickCHelper->updateIP(wifiManager.ip());
 #endif
 
+#ifndef USE_UART
     webServer.enableWiFiManager(&wifiManager);
     webServer.enableGPIOController(&gpioController);
+#endif
 
 #ifdef USE_OTA
     webServer.enableOTA(&otaManager);
 #endif
 
     webServer.begin();
-
     mdns.begin();
-#endif
+#endif // USE_WIFI
 
-    APIServer *apiServer = new APIServer();
+    apiServer = new APIServer();
+    apiServer->registerHandler(new PlatformHandler());
     apiServer->registerHandler(new GPIOHandler(&gpioController));
 
 #ifdef USE_OTA
@@ -74,6 +90,13 @@ void setup() {
 #ifdef USE_WIFI
     apiServer->registerTransport(new TcpTransport());
 #endif
+
+#ifdef USE_UART_TRANSPORT
+    serialTransport = new SerialTransport(Serial);
+    apiServer->registerTransport(serialTransport);
+    serialTransport->registerSerialClient();
+#endif
+
 }
 
 void loop()
@@ -87,28 +110,30 @@ void loop()
 #ifdef USE_WIFI
      mdns.update();
 #endif
+
+#ifdef USE_UART_TRANSPORT
+    //serialTransport->loop();
+#endif
+
 }
 
-
-void setupWebServer() {
-}
 
 //void printWelcome() {
-//    Serial.println("");
-//    Serial.println("     .");
-//    Serial.println("     ++,");
-//    Serial.println("    |`--`+-.");
-//    Serial.println("     ``--`-++. .;;+.");
-//    Serial.println("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
-//    Serial.println("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
-//    Serial.println("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
-//    Serial.println("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
-//    Serial.println("          |+++#`                      __/ |           ");
-//    Serial.println("          `###+.                     |___/            O W L E T");
-//    Serial.print("           `###+                                      ");
-//    Serial.println(VERSION);
-//    Serial.println("             `#+");
-//    Serial.println("               `");
-//    Serial.println("");
+//    DebugPrintln("");
+//    DebugPrintln("     .");
+//    DebugPrintln("     ++,");
+//    DebugPrintln("    |`--`+-.");
+//    DebugPrintln("     ``--`-++. .;;+.");
+//    DebugPrintln("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
+//    DebugPrintln("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
+//    DebugPrintln("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
+//    DebugPrintln("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
+//    DebugPrintln("          |+++#`                      __/ |           ");
+//    DebugPrintln("          `###+.                     |___/            O W L E T");
+//    DebugPrint("           `###+                                      ");
+//    DebugPrintln(VERSION);
+//    DebugPrintln("             `#+");
+//    DebugPrintln("               `");
+//    DebugPrintln("");
 //}
 

@@ -1,4 +1,6 @@
 #include "otahandler.h"
+#include "debugutils.h"
+#include "owlet.h"
 
 OTAHandler::OTAHandler():
     APIHandler("OTA")
@@ -8,8 +10,8 @@ OTAHandler::OTAHandler():
 
 JSONVar OTAHandler::GetVersion(APIHandler *thiz, const JSONVar &data)
 {
-    Serial.println("Version called!");
+    DebugPrintln("Version called!");
     JSONVar json;
-    json["version"] = "0.0.0";
+    json["version"] = FIRMWARE_VERSION;
     return json;
 }

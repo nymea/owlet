@@ -1,4 +1,5 @@
 #include "localstorage.h"
+#include "debugutils.h"
 
 #ifdef ESP32
 #include <Preferences.h>
@@ -29,7 +30,7 @@ void LocalStorage::store(const String &configName, const JSONVar &value)
 LocalStorage::LocalStorage()
 {
     if (!SPIFFS.begin()) {
-      Serial.println("Error opening SPIFFS. Cannot store settings.");
+      DebugPrintln("Error opening SPIFFS. Cannot store settings.");
     }
 }
 
@@ -37,7 +38,7 @@ JSONVar LocalStorage::load(const String &configName)
 {
     File configFile = SPIFFS.open("/" + configName + ".json", "r");
     if (!configFile) {
-        Serial.println("No configuration file found.");
+        DebugPrintln("No configuration file found.");
         return JSONVar();
     }
 
@@ -54,7 +55,7 @@ void LocalStorage::store(const String &configName, const JSONVar &value)
 {
     File configFile = SPIFFS.open("/" + configName + ".json", "w");
     if (!configFile) {
-        Serial.println("Error opening config file for writing.");
+        DebugPrintln("Error opening config file for writing.");
         return;
     }
     configFile.write(JSON.stringify(value).c_str());

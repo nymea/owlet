@@ -1,6 +1,7 @@
 #include "apiserver.h"
+#include "debugutils.h"
 
-#ifdef ESP32
+#if defined(ESP32) || defined(__UNO__)  
 #include <HardwareSerial.h>
 #else
 #include <SoftwareSerial.h>
@@ -23,17 +24,17 @@ APIServer::~APIServer()
 void APIServer::registerTransport(Transport *transport)
 {
     transport->onConnect([=](void *thiz, OwletClient *client){
-        Serial.println(String("New client connected: "));// + client->remoteName());
+        DebugPrintln(String("New client connected: "));// + client->remoteName());
         m_clients.add(client);
 
         client->onData(&dataHandler, this);
 
         client->onDisconnect([=](void *thiz, OwletClient *client){
-            Serial.println(String("Client disconnected: ") + client->remoteName());
+            DebugPrintln(String("Client disconnected: ") + client->remoteName());
             for (unsigned int i = 0; i < m_clients.length(); i++) {
                 if (m_clients[i] == client) {
                     m_clients.erase(i);
-                    Serial.println(String("API client ") + client->remoteName() + " removed.");
+                    DebugPrintln(String("API client ") + client->remoteName() + " removed.");
                     delete client;
                 }
             }
@@ -57,8 +58,8 @@ void APIServer::registerHandler(APIHandler *handler)
 //            client->send();
 //        }
 //    });
-    Serial.println("registering api handler");
-    Serial.println(handler->nameSpace());
+    DebugPrintln("registering api handler");
+    DebugPrintln(handler->nameSpace());
     m_handlers.add(handler);
 }
 
@@ -71,15 +72,15 @@ void APIServer::dataHandler(void *ctx, OwletClient *client, const char* data, si
     memcpy(buf, data, len);
     JSONVar json = JSON.parse(buf);
 
-//    Serial.print(String("Data received from client ") + client->remoteName() + ": " + buf);
+//    DebugPrint(String("Data received from client ") + client->remoteName() + ": " + buf);
     if (JSON.typeof(json) == "undefined") {
-//        Serial.println(String("Invalid data from client ") + client->remoteName());
+//        DebugPrintln(String("Invalid data from client ") + client->remoteName());
         ref->sendErrorReply(client, -1, "JSON parse error.");
         return;
     }
 
     if (!json.hasOwnProperty("id")) {
-//        Serial.println(String("Invalid method call. Missing id field. Client: ") + client->remoteName());
+//        DebugPrintln(String("Invalid method call. Missing id field. Client: ") + client->remoteName());
         ref->sendErrorReply(client, -1, "Missing id field.");
         return;
     }
@@ -88,35 +89,35 @@ void APIServer::dataHandler(void *ctx, OwletClient *client, const char* data, si
 
     String method((const char*)json["method"]);
     int dotIndex = method.indexOf(".");
-    if (dotIndex <= 0 || dotIndex >= method.length() - 1) {
+    if (dotIndex <= 0 || dotIndex >= static_cast<int>(method.length() - 1)) {
         ref->sendErrorReply(client, commandId, "Invalid method");
         return;
     }
     String nameSpace = method.substring(0, dotIndex);
     method = method.substring(dotIndex + 1, method.length());
 
-//    Serial.print("Method call ");
-//    Serial.print(nameSpace);
-//    Serial.print(".");
-//    Serial.println(method);
+//    DebugPrint("Method call ");
+//    DebugPrint(nameSpace);
+//    DebugPrint(".");
+//    DebugPrintln(method);
 
     for (auto it = ref->m_handlers.begin(); it != ref->m_handlers.end(); ++it) {
         APIHandler *handler = (*it);
         if (handler->nameSpace() == nameSpace) {
-//            Serial.println("Found handler");
+//            DebugPrintln("Found handler");
 
             for (unsigned int i = 0; i < handler->methods().length(); i++) {
                 APIMethod m = handler->methods()[i];
-//                Serial.println(String("Testing method ") + m.name);
+//                DebugPrintln(String("Testing method ") + m.name);
                 if (m.name == method) {
-//                    Serial.println("Found method!");
+//                    DebugPrintln("Found method!");
                     JSONVar ret = m.func(handler, json["params"]);
                     ref->sendReply(client, commandId, ret);
                     return;
                 }
-//                Serial.println("Nope... not the one");
+//                DebugPrintln("Nope... not the one");
             }
-//            Serial.println("Method not found");
+//            DebugPrintln("Method not found");
             break;
         }
     }
@@ -148,10 +149,10 @@ void APIServer::sendReply(OwletClient *client, int commandId, const JSONVar &par
 
 void APIServer::onNotification(APIHandler *hander, const String &name, const JSONVar &params)
 {
-    Serial.println("notification");
+    DebugPrintln("notification");
     for (auto it = s_instance->m_clients.begin(); it != s_instance->m_clients.end(); ++it) {
         OwletClient *client = *it;
-        Serial.println(String("Notifying client: ") + client->remoteName());
+        DebugPrintln(String("Notifying client: ") + client->remoteName());
         JSONVar message;
         message["notification"] = name;
         message["params"] = params;

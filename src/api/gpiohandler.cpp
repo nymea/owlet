@@ -1,4 +1,5 @@
 #include "gpiohandler.h"
+#include "debugutils.h"
 
 GPIOHandler::GPIOHandler(GPIOController *controller):
     APIHandler("GPIO"),
@@ -26,12 +27,12 @@ GPIOHandler::GPIOHandler(GPIOController *controller):
 
 JSONVar GPIOHandler::ConfigurePin(APIHandler *thiz, const JSONVar &data)
 {
-    Serial.println("Configure GPIO called");
+    DebugPrintln("Configure GPIO called");
     GPIOHandler *self = static_cast<GPIOHandler*>(thiz);
     JSONVar ret;
 
     JSONVar obj(data);
-    Serial.println(obj["id"]);
+    DebugPrintln(obj["id"]);
 
     int id = obj["id"];
     GPIOController::PinMode pinMode = stringToPinMode((const char*)obj["mode"]);
@@ -43,6 +44,8 @@ JSONVar GPIOHandler::ConfigurePin(APIHandler *thiz, const JSONVar &data)
     }
 
     switch (pinMode) {
+    case GPIOController::PinModeUnconfigured:
+        break;
     case GPIOController::PinModeGPIOInput:
         break;
     case GPIOController::PinModeGPIOOutput:
@@ -67,7 +70,7 @@ JSONVar GPIOHandler::ControlPin(APIHandler *thiz, const JSONVar &data)
 
     JSONVar obj(data);
     int id = obj["id"];
-    Serial.println("Control GPIO called");
+    DebugPrintln("Control GPIO called");
     switch (controller->getPinMode(id)) {
     case GPIOController::PinModeUnconfigured:
         status = GPIOController::GPIOErrorUnconfigured;
@@ -90,6 +93,10 @@ JSONVar GPIOHandler::ControlPin(APIHandler *thiz, const JSONVar &data)
         }
         // obj["effect"]
         break;
+// #else
+//     case GPIOController::PinModeWS2812: 
+//         status = GPIOController::GPIOErrorUnsupported;
+//         break;
 #endif
     }
 
@@ -105,6 +112,8 @@ String GPIOHandler::errorToString(GPIOController::GPIOError error)
         return "GPIOErrorNoError";
     case GPIOController::GPIOErrorUnconfigured:
         return "GPIOErrorUnconfigured";
+    case GPIOController::GPIOErrorUnsupported:
+        return "GPIOErrorUnsupported";
     case GPIOController::GPIOErrorConfigurationMismatch:
         return "GPIOErrorConfigurationMisMatch";
     }
@@ -130,7 +139,7 @@ GPIOController::PinMode GPIOHandler::stringToPinMode(const String &string)
 #ifdef USE_WS2812FX
 GPIOController::WS2812Mode GPIOHandler::stringToWS2812Mode(const String &string)
 {
-    Serial.println("Configuring as " + string);
+    DebugPrintln("Configuring as " + string);
 
     if (string == "WS2812ModeRGB") { return GPIOController::WS2812ModeRGB; }
     if (string == "WS2812ModeRBG") { return GPIOController::WS2812ModeRBG; }

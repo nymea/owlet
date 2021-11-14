@@ -1,4 +1,5 @@
 #include "tcptransport.h"
+#include "debugutils.h"
 
 TcpTransport::TcpTransport()
 {
@@ -18,7 +19,7 @@ TcpTransport::~TcpTransport()
 void TcpTransport::newClientHandler(void *thiz, AsyncClient *client)
 {
     TcpTransport *ref = static_cast<TcpTransport*>(thiz);
-    Serial.println(String("New API client from ") + client->remoteIP().toString());
+    DebugPrintln(String("New API client from ") + client->remoteIP().toString());
     ref->m_clients.push_back(client);
 
     TcpClient *tcpClient = new TcpClient(client);
