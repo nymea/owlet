@@ -4,13 +4,14 @@
 #include <ustd_map.h>
 #include <ustd_functional.h>
 
+typedef ustd::function<void(int id, bool power)> PowerChangedHandlerFunction;
+
 #ifdef USE_WS2812FX
 #include <WS2812FX.h>
-#endif
-
-typedef ustd::function<void(int id, bool power)> PowerChangedHandlerFunction;
 typedef ustd::function<void(int id, int brightness)> BrightnessChangedHandlerFunction;
 typedef ustd::function<void(int id, int color)> ColorChangedHandlerFunction;
+typedef ustd::function<void(int id, int color)> EffectChangedHandlerFunction;
+#endif
 
 
 class GPIOController
@@ -89,9 +90,11 @@ public:
     GPIOError setWs2812Power(int id, bool power);
     GPIOError setWs2812Brightness(int id, int brightness);
     GPIOError setWs2812Color(int id, int color);
+    GPIOError setWs2812Effect(int id, int effect);
 
-    void onBrightnessChanged(BrightnessChangedHandlerFunction callback);
-    void onColorChanged(ColorChangedHandlerFunction callback);
+    void onWs2812BrightnessChanged(BrightnessChangedHandlerFunction callback);
+    void onWs2812ColorChanged(ColorChangedHandlerFunction callback);
+    void onWs2812EffectChanged(EffectChangedHandlerFunction callback);
 #endif
 
     void loop();
@@ -107,6 +110,7 @@ private:
     ustd::map<int, WS2812FX*> m_ws2812map;
     ustd::array<BrightnessChangedHandlerFunction> m_brightnessChangedHandlers;
     ustd::array<ColorChangedHandlerFunction> m_colorChangedHandlers;
+    ustd::array<EffectChangedHandlerFunction> m_effectChangedHandlers;
 #endif
 };
 

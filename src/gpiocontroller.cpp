@@ -85,14 +85,19 @@ GPIOController::GPIOError GPIOController::configureWS2812(int id, int ledCount, 
     return GPIOErrorNoError;
 }
 
-void GPIOController::onBrightnessChanged(BrightnessChangedHandlerFunction callback)
+void GPIOController::onWs2812BrightnessChanged(BrightnessChangedHandlerFunction callback)
 {
     m_brightnessChangedHandlers.add(callback);
 }
 
-void GPIOController::onColorChanged(ColorChangedHandlerFunction callback)
+void GPIOController::onWs2812ColorChanged(ColorChangedHandlerFunction callback)
 {
     m_colorChangedHandlers.add(callback);
+}
+
+void GPIOController::onWs2812EffectChanged(EffectChangedHandlerFunction callback)
+{
+    m_effectChangedHandlers.add(callback);
 }
 
 GPIOController::GPIOError GPIOController::setWs2812Power(int id, bool power)
@@ -157,13 +162,34 @@ GPIOController::GPIOError GPIOController::setWs2812Color(int id, int color)
     if (!ws2812fx) {
         return GPIOErrorUnconfigured;;
     }
-//    Serial.println(String("Setting ws2812 color: ") + color);
+    Serial.println(String("Setting ws2812 color: ") + color);
     ws2812fx->setColor(color);
-    ws2812fx->setMode(FX_MODE_STATIC);
-//    ws2812fx->setMode(effect);
 
     for (unsigned int i = 0; i < m_colorChangedHandlers.length(); i++) {
         m_colorChangedHandlers[i](id, color);
+    }
+
+    return GPIOErrorNoError;
+}
+
+GPIOController::GPIOError GPIOController::setWs2812Effect(int id, int effect)
+{
+    int idx = m_pinModes.find(id);
+    if (idx == -1) {
+        return GPIOErrorUnconfigured;
+    }
+    if (m_pinModes[id] != PinModeWS2812) {
+        return GPIOErrorConfigurationMismatch;
+    }
+    WS2812FX *ws2812fx = m_ws2812map[id];
+    if (!ws2812fx) {
+        return GPIOErrorUnconfigured;;
+    }
+    Serial.println(String("Setting effect:")  + effect);
+    ws2812fx->setMode(effect);
+
+    for (unsigned int i = 0; i < m_colorChangedHandlers.length(); i++) {
+        m_effectChangedHandlers[i](id, effect);
     }
 
     return GPIOErrorNoError;

@@ -15,10 +15,22 @@ GPIOHandler::GPIOHandler(GPIOController *controller):
     });
 
 #ifdef USE_WS2812FX
-    m_controller->onBrightnessChanged([=](int id, int brightness){
+    m_controller->onWs2812BrightnessChanged([=](int id, int brightness){
         JSONVar params;
         params["id"] = id;
         params["brightness"] = brightness;
+        sendNotification("PinChanged", params);
+    });
+    m_controller->onWs2812ColorChanged([=](int id, int color){
+        JSONVar params;
+        params["id"] = id;
+        params["color"] = color;
+        sendNotification("PinChanged", params);
+    });
+    m_controller->onWs2812EffectChanged([=](int id, int effect){
+        JSONVar params;
+        params["id"] = id;
+        params["effect"] = effect;
         sendNotification("PinChanged", params);
     });
 #endif
@@ -63,11 +75,11 @@ JSONVar GPIOHandler::ControlPin(APIHandler *thiz, const JSONVar &data)
     GPIOHandler *self = static_cast<GPIOHandler*>(thiz);
     GPIOController *controller = self->m_controller;
 
-    GPIOController::GPIOError status = GPIOController::GPIOErrorNoError;
+    GPIOController::GPIOError status = GPIOController::GPIOErrorConfigurationMismatch;
 
     JSONVar obj(data);
     int id = obj["id"];
-    Serial.println("Control GPIO called");
+    Serial.println("Control GPIO called: " + JSON.stringify(obj));
     switch (controller->getPinMode(id)) {
     case GPIOController::PinModeUnconfigured:
         status = GPIOController::GPIOErrorUnconfigured;
@@ -88,7 +100,10 @@ JSONVar GPIOHandler::ControlPin(APIHandler *thiz, const JSONVar &data)
         if (obj.hasOwnProperty("color")) {
             status = controller->setWs2812Color(id, obj["color"]);
         }
-        // obj["effect"]
+        if (obj.hasOwnProperty("effect")) {
+            Serial.println("Set effect!");
+            status = controller->setWs2812Effect(id, obj["effect"]);
+        }
         break;
 #endif
     }

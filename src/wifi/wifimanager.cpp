@@ -47,8 +47,8 @@ void WiFiManager::begin()
 
 #else
         WiFiConfig config;
-        config.ssid = "Your SSID";
-        config.password = "Your PW";
+        config.ssid = "Ice Cap Zone";
+        config.password = "Am Arsch die Raeuber";
         connectToWiFi(config);
     }
 #endif

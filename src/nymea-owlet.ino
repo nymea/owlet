@@ -39,7 +39,7 @@ GPIOController gpioController;
 
 void setup() {
     Serial.begin(115200);
-//    printWelcome();
+    printWelcome();
 
 #ifdef USE_M5STICKC
     M5StickCHelper *m5StickCHelper = new M5StickCHelper();
@@ -93,22 +93,22 @@ void loop()
 void setupWebServer() {
 }
 
-//void printWelcome() {
-//    Serial.println("");
-//    Serial.println("     .");
-//    Serial.println("     ++,");
-//    Serial.println("    |`--`+-.");
-//    Serial.println("     ``--`-++. .;;+.");
-//    Serial.println("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
-//    Serial.println("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
-//    Serial.println("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
-//    Serial.println("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
-//    Serial.println("          |+++#`                      __/ |           ");
-//    Serial.println("          `###+.                     |___/            O W L E T");
-//    Serial.print("           `###+                                      ");
-//    Serial.println(VERSION);
-//    Serial.println("             `#+");
-//    Serial.println("               `");
-//    Serial.println("");
-//}
+void printWelcome() {
+    Serial.println("");
+    Serial.println("     .");
+    Serial.println("     ++,");
+    Serial.println("    |`--`+-.");
+    Serial.println("     ``--`-++. .;;+.");
+    Serial.println("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
+    Serial.println("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
+    Serial.println("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
+    Serial.println("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
+    Serial.println("          |+++#`                      __/ |           ");
+    Serial.println("          `###+.                     |___/            O W L E T");
+    Serial.print("           `###+                                      ");
+    Serial.println(VERSION);
+    Serial.println("             `#+");
+    Serial.println("               `");
+    Serial.println("");
+}
 
