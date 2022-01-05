@@ -2,7 +2,6 @@
 #define OWLETPLATFORM_H
 
 #include <Arduino.h>
-//#include <StringArray.h>
 
 class Platform {
 public:
@@ -12,4 +11,4 @@ public:
     String firmwareVersion() const;
 };
 
-#endif // OWLET
+#endif // OWLETPLATFORM_H

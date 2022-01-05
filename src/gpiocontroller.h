@@ -3,32 +3,40 @@
 
 #include <ustd_map.h>
 #include <ustd_functional.h>
+#include <Servo.h>
 
 #ifdef USE_WS2812FX
 #include <WS2812FX.h>
 #endif
 
-typedef ustd::function<void(int id, bool power)> PowerChangedHandlerFunction;
+typedef ustd::function<void(uint8_t id, bool power)> PowerChangedHandlerFunction;
+
+#ifdef USE_WS2812FX
 typedef ustd::function<void(int id, int brightness)> BrightnessChangedHandlerFunction;
 typedef ustd::function<void(int id, int color)> ColorChangedHandlerFunction;
-
+#endif
 
 class GPIOController
 {
 public:
     enum GPIOError {
-        GPIOErrorNoError,
-        GPIOErrorUnconfigured,
-        GPIOErrorUnsupported,
-        GPIOErrorConfigurationMismatch
+        GPIOErrorNoError = 0x00,
+        GPIOErrorUnconfigured = 0x01,
+        GPIOErrorUnsupported = 0x02,
+        GPIOErrorConfigurationMismatch = 0x03,
+        GPIOErrorInvalidParameter = 0x04,
+        GPIOErrorInvalidPin = 0x05
     };
 
     enum PinMode{
-        PinModeUnconfigured = 0,
-        PinModeGPIOInput,
-        PinModeGPIOOutput,
+        PinModeUnconfigured = 0x00,
+        PinModeGPIOInput = 0x01,
+        PinModeGPIOOutput = 0x02,
+        PinModeAnalogInput = 0x03,
+        PinModeAnalogOutput = 0x04,
+        PinModeServo = 0x05,
 #ifdef USE_WS2812FX
-        PinModeWS2812,
+        PinModeWS2812 = 0x10
 #endif
     };
 
@@ -77,13 +85,18 @@ public:
 
     GPIOController();
 
-    int gpioCount() const;
+    uint8_t gpioCount() const;
 
-    GPIOError configurePin(int id, PinMode mode);
-    PinMode getPinMode(int id) const;
+    GPIOError configurePin(uint8_t id, PinMode mode);
+    PinMode getPinMode(uint8_t id) const;
 
-    GPIOError setGPIOPower(int id, bool power);
+    GPIOError setGPIOPower(uint8_t id, bool power);
     void onPowerChanged(PowerChangedHandlerFunction callback);
+
+    int readDigitalValue(uint8_t id);
+    int readAnalogValue(uint8_t id);
+    GPIOError writeAnalogValue(uint8_t id, uint8_t value);
+    GPIOError writeServoValue(uint8_t id, uint8_t value);
 
 #if USE_WS2812FX
     GPIOError configureWS2812(int id, int ledCount, WS2812Mode mode, WS2812Clock clock);
@@ -98,9 +111,9 @@ public:
     void loop();
 
 private:
-
-    ustd::map<int, PinMode> m_pinModes;
-    ustd::map<int, int> m_inputStates;
+    ustd::map<uint8_t, PinMode> m_pinModes;
+    ustd::map<uint8_t, uint8_t> m_inputStates;
+    ustd::map<uint8_t, Servo> m_servos;
 
     ustd::array<PowerChangedHandlerFunction> m_powerChangedHandlers;
 
@@ -109,7 +122,7 @@ private:
     ustd::array<BrightnessChangedHandlerFunction> m_brightnessChangedHandlers;
     ustd::array<ColorChangedHandlerFunction> m_colorChangedHandlers;
 #endif
-};
 
+};
 
 #endif

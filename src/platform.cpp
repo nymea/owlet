@@ -20,7 +20,7 @@ String Platform::deviceId() const
 
     uint16_t chip = (uint16_t)(chipId >> 32);
     char serial[13];
-    snprintf(serial, 13, "%04X%08X", chip, (uint32_t)chipId);
+    snprintf(serial, 13, "%04X%08X", chip, chipId);
     return String(serial);
 }
 

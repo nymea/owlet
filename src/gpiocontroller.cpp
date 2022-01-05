@@ -1,14 +1,15 @@
 #include "gpiocontroller.h"
-#include "localstorage.h"
 #include "debugutils.h"
 
 GPIOController::GPIOController()
 {
+    
 }
 
-GPIOController::GPIOError GPIOController::configurePin(int id, GPIOController::PinMode mode)
+GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOController::PinMode mode)
 {
     DebugPrintln(String("Configuring Pin ") + id + " as " + mode);
+    
     switch (mode) {
     case PinModeGPIOInput:
         pinMode(id, INPUT);
@@ -16,29 +17,62 @@ GPIOController::GPIOError GPIOController::configurePin(int id, GPIOController::P
     case PinModeGPIOOutput:
         pinMode(id, OUTPUT);
         break;
+    case PinModeAnalogInput:
+        // Configure to input and read once the value
+        pinMode(id, INPUT);
+        analogRead(id);
+        break;
+    case PinModeAnalogOutput:
+        // Configure to input and read once the value
+        pinMode(id, OUTPUT);
+        analogWrite(id, 0);
+        break;
+    case PinModeServo: {
+        int index = m_servos.find(id);
+        if (index >= 0) {
+            m_servos[id].detach();
+            m_servos.erase(id);
+        }
+
+        m_servos[id] = Servo();
+        uint8_t channel = m_servos[id].attach(id);
+        if (channel == INVALID_SERVO) {
+            m_servos.erase(id);
+            return GPIOErrorInvalidPin;
+        }
+        break;
+    }
 #ifdef USE_WS2812FX
     case PinModeWS2812:
         break;
 #endif
-    case PinModeUnconfigured:
+    case PinModeUnconfigured: {
+        if (m_servos.find(id) >= 0) {
+            m_servos[id].detach();
+            m_servos.erase(id);
+        }
+
+        // Default to input
+        pinMode(id, INPUT);
         break;
+    }
     }
 
     m_pinModes[id] = mode;
     return GPIOErrorNoError;
 }
 
-int GPIOController::gpioCount() const
+uint8_t GPIOController::gpioCount() const
 {
     return 6;
 }
 
-GPIOController::PinMode GPIOController::getPinMode(int id) const
+GPIOController::PinMode GPIOController::getPinMode(uint8_t id) const
 {
     return m_pinModes[id];
 }
 
-GPIOController::GPIOError GPIOController::setGPIOPower(int id, bool power)
+GPIOController::GPIOError GPIOController::setGPIOPower(uint8_t id, bool power)
 {
     int idx = m_pinModes.find(id);
     if (idx == -1) {
@@ -61,6 +95,48 @@ void GPIOController::onPowerChanged(PowerChangedHandlerFunction callback)
     m_powerChangedHandlers.add(callback);
 }
 
+int GPIOController::readDigitalValue(uint8_t id)
+{
+    return digitalRead(id);
+}
+
+int GPIOController::readAnalogValue(uint8_t id)
+{
+    return analogRead(id);
+}
+
+GPIOController::GPIOError GPIOController::writeAnalogValue(uint8_t id, uint8_t value)
+{
+    int idx = m_pinModes.find(id);
+    if (idx == -1) {
+        return GPIOErrorUnconfigured;
+    }
+
+    if (m_pinModes[id] != PinModeAnalogOutput) {
+        return GPIOErrorConfigurationMismatch;
+    }
+
+    analogWrite(id, value);
+    return GPIOErrorNoError;
+}
+
+GPIOController::GPIOError GPIOController::writeServoValue(uint8_t id, uint8_t value)
+{
+    if (m_pinModes.find(id) < 0) {
+        return GPIOErrorUnconfigured;
+    }
+
+    if (m_pinModes[id] != PinModeServo) {
+        return GPIOErrorConfigurationMismatch;
+    }
+
+    if (!m_servos[id].attached()) {
+        return GPIOErrorUnconfigured;
+    }
+
+    m_servos[id].write(value);
+    return GPIOErrorNoError;
+}
 
 #ifdef USE_WS2812FX
 GPIOController::GPIOError GPIOController::configureWS2812(int id, int ledCount, WS2812Mode mode, WS2812Clock clock)
@@ -172,11 +248,11 @@ GPIOController::GPIOError GPIOController::setWs2812Color(int id, int color)
 
 void GPIOController::loop()
 {
-    ustd::array<int> pins = m_pinModes.keysArray();
+    ustd::array<uint8_t> pins = m_pinModes.keysArray();
     for (unsigned int i = 0; i < pins.length(); i++) {
-        int pin = pins[i];
+        uint8_t pin = pins[i];
         if (m_pinModes[pin] == PinModeGPIOInput) {
-            int state = digitalRead(pin);
+            uint8_t state = digitalRead(pin);
             if (state != m_inputStates[pin]) {
                 DebugPrintln(String("Pin ") + pin + " state changed: " + state);
                 m_inputStates[pin] = state;

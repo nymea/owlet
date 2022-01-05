@@ -3,15 +3,16 @@
 
 #include <Arduino.h>
 
-#ifdef SERIAL_DEBUG_ENABLED 
-  #define DebugPrint(...) \
-        Serial.print(millis()); \
-        Serial.print(": "); \
-        Serial.print(__VA_ARGS__)
-  #define DebugPrintln(...) \
-        Serial.print(millis()); \
-        Serial.print(': '); \
-        Serial.println(__VA_ARGS__)
+#ifdef SERIAL_DEBUG_ENABLED
+  #ifdef USE_UART_TRANSPORT
+    #define DebugPrint(...) 
+    #define DebugPrintln(...)
+  #else
+    #define DebugPrint(...) \
+          Serial.print(__VA_ARGS__)
+    #define DebugPrintln(...) \
+          Serial.println(__VA_ARGS__)
+  #endif // USE_UART_TRANSPORT
 #else
   #define DebugPrint(...)
   #define DebugPrintln(...)  

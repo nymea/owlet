@@ -11,9 +11,7 @@
 #include "platform.h"
 #include "debugutils.h"
 #include "owlet.h"
-#include "api/apiserver.h"
-#include "api/gpiohandler.h"
-#include "api/platformhandler.h"
+
 
 #ifdef USE_M5STICKC
     #include "m5stickc/m5stickchelper.h"
@@ -37,23 +35,27 @@
     OTAManager otaManager;
 #endif
 
-APIServer *apiServer;
-GPIOController gpioController;
-
 #ifdef USE_UART_TRANSPORT
-    #include "uart/serialtransport.h"
-    SerialTransport *serialTransport;
+    #include "uart/uartapiserver.h"
+    UartApiServer *uartApiServer;
+#else
+    #include "api/apiserver.h"
+    #include "api/gpiohandler.h"
+    #include "api/platformhandler.h"
+    APIServer *apiServer;
 #endif
 
+GPIOController gpioController;
 
 void setup() 
 {
 
-//#ifndef USE_UART_TRANSPORT
+#ifdef USE_UART_TRANSPORT
+    uartApiServer = new UartApiServer(Serial, &gpioController);
+    uartApiServer->init();
+#else
     Serial.begin(115200);
-    DebugPrintln("Setup");
-//#endif
-
+#endif
 
 #ifdef USE_M5STICKC
     M5StickCHelper *m5StickCHelper = new M5StickCHelper();
@@ -79,9 +81,12 @@ void setup()
     mdns.begin();
 #endif // USE_WIFI
 
+
+#ifndef USE_UART_TRANSPORT
     apiServer = new APIServer();
     apiServer->registerHandler(new PlatformHandler());
     apiServer->registerHandler(new GPIOHandler(&gpioController));
+#endif
 
 #ifdef USE_OTA
     apiServer->registerHandler(new OTAHandler());
@@ -89,12 +94,6 @@ void setup()
 
 #ifdef USE_WIFI
     apiServer->registerTransport(new TcpTransport());
-#endif
-
-#ifdef USE_UART_TRANSPORT
-    serialTransport = new SerialTransport(Serial);
-    apiServer->registerTransport(serialTransport);
-    serialTransport->registerSerialClient();
 #endif
 
 }
@@ -112,7 +111,7 @@ void loop()
 #endif
 
 #ifdef USE_UART_TRANSPORT
-    //serialTransport->loop();
+    uartApiServer->loop();
 #endif
 
 }

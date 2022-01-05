@@ -8,7 +8,7 @@ GPIOHandler::GPIOHandler(GPIOController *controller):
     registerMethod("ConfigurePin", &GPIOHandler::ConfigurePin);
     registerMethod("ControlPin", &GPIOHandler::ControlPin);
 
-    m_controller->onPowerChanged([=](int id, bool power){
+    m_controller->onPowerChanged([=](uint8_t id, bool power){
         JSONVar params;
         params["id"] = id;
         params["power"] = power;
