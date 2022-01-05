@@ -3,7 +3,7 @@
 
 GPIOController::GPIOController()
 {
-    
+
 }
 
 GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOController::PinMode mode)
@@ -13,6 +13,7 @@ GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOControlle
     switch (mode) {
     case PinModeGPIOInput:
         pinMode(id, INPUT);
+        m_inputStates[id] = digitalRead(id);
         break;
     case PinModeGPIOOutput:
         pinMode(id, OUTPUT);
@@ -28,15 +29,17 @@ GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOControlle
         analogWrite(id, 0);
         break;
     case PinModeServo: {
-        int index = m_servos.find(id);
-        if (index >= 0) {
-            m_servos[id].detach();
+        // Remove the existing servo
+        if (m_servos.find(id) >= 0) {
+            m_servos[id]->detach();
+            delete m_servos[id];
             m_servos.erase(id);
         }
 
-        m_servos[id] = Servo();
-        uint8_t channel = m_servos[id].attach(id);
+        m_servos[id] = new Servo();
+        uint8_t channel = m_servos[id]->attach(id);
         if (channel == INVALID_SERVO) {
+            delete m_servos[id];
             m_servos.erase(id);
             return GPIOErrorInvalidPin;
         }
@@ -48,8 +51,13 @@ GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOControlle
 #endif
     case PinModeUnconfigured: {
         if (m_servos.find(id) >= 0) {
-            m_servos[id].detach();
+            m_servos[id]->detach();
+            delete m_servos[id];
             m_servos.erase(id);
+        }
+
+        if (m_inputStates.find(id) >= 0) {
+            m_inputStates.erase(id);
         }
 
         // Default to input
@@ -130,11 +138,11 @@ GPIOController::GPIOError GPIOController::writeServoValue(uint8_t id, uint8_t va
         return GPIOErrorConfigurationMismatch;
     }
 
-    if (!m_servos[id].attached()) {
+    if (!m_servos[id]->attached()) {
         return GPIOErrorUnconfigured;
     }
 
-    m_servos[id].write(value);
+    m_servos[id]->write(value);
     return GPIOErrorNoError;
 }
 
@@ -248,7 +256,7 @@ GPIOController::GPIOError GPIOController::setWs2812Color(int id, int color)
 
 void GPIOController::loop()
 {
-    ustd::array<uint8_t> pins = m_pinModes.keysArray();
+    ustd::array<uint8_t> pins = m_inputStates.keysArray();
     for (unsigned int i = 0; i < pins.length(); i++) {
         uint8_t pin = pins[i];
         if (m_pinModes[pin] == PinModeGPIOInput) {

@@ -113,7 +113,7 @@ public:
 private:
     ustd::map<uint8_t, PinMode> m_pinModes;
     ustd::map<uint8_t, uint8_t> m_inputStates;
-    ustd::map<uint8_t, Servo> m_servos;
+    ustd::map<uint8_t, Servo *> m_servos;
 
     ustd::array<PowerChangedHandlerFunction> m_powerChangedHandlers;
 

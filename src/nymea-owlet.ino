@@ -7,11 +7,11 @@
 #endif
 
 #include <Arduino.h>
+
 #include "gpiocontroller.h"
 #include "platform.h"
 #include "debugutils.h"
 #include "owlet.h"
-
 
 #ifdef USE_M5STICKC
     #include "m5stickc/m5stickchelper.h"
