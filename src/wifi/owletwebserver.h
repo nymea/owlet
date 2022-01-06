@@ -10,7 +10,6 @@
 
 
 class WiFiManager;
-class GPIOController;
 class OTAManager;
 
 class OwletWebServer {
@@ -23,7 +22,6 @@ public:
 
   void enableWiFiManager(WiFiManager *wifiManager);
   void enableOTA(OTAManager *otaManager);
-  void enableGPIOController(GPIOController *gpioController);
 
 private:
     String processor(const String& var);
@@ -32,6 +30,5 @@ private:
 
     WiFiManager *m_wifiManager = nullptr;
     OTAManager *m_otaManager = nullptr;
-    GPIOController *m_gpioController = nullptr;
 };
 

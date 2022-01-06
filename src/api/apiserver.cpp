@@ -57,7 +57,7 @@ void APIServer::registerHandler(APIHandler *handler)
 //            client->send();
 //        }
 //    });
-    Serial.println("registering api handler");
+//    Serial.println("registering api handler");
     Serial.println(handler->nameSpace());
     m_handlers.add(handler);
 }

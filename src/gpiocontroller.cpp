@@ -82,6 +82,7 @@ GPIOController::GPIOError GPIOController::configureWS2812(int id, int ledCount, 
 //    ws2812fx->setColor(0x00ff00);
 //    ws2812fx->setMode(FX_MODE_STATIC);
     m_ws2812map[id] = ws2812fx;
+    setWs2812Power(id, false);
     return GPIOErrorNoError;
 }
 

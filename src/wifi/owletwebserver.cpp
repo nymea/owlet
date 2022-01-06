@@ -18,11 +18,6 @@ const char indexHtml[] PROGMEM = R"rawliteral(
     %WIFICONFIGSECTION%
 
     %OTASECTION%
-
-    %GPIOCONTROLSECTION%
-
-
-
 </body>
 </html>
 )rawliteral";
@@ -44,51 +39,13 @@ const char wifiSection[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 const char otaSection[] PROGMEM = R"rawliteral(
+<h3 class="auto-center"><span class="number">2</span> Firmware update</h3>
 <form action='/ota' method='GET'>
   <div class="container"><label for='ota-url'>OTA Update URL</label><input name='ota-url' id='ota-url' type="url" value=''>
     <div class="auto-center"><button>Upgrade</button></div>
 
   </div>
 </form>
-)rawliteral";
-
-const char gpioSection[] PROGMEM = R"rawliteral(
-    <form action='/gpio' method='GET'>
-      <div class="container">
-        <ul>
-          {{buttons}}
-        </ul>
-      </div>
-      <div class="auto-center"><button class="cta-confirm">Apply</button></div>
-      <div class="auto-center"><button class="cta-danger">Cancel</button></div>
-    </form>
-
-    <script>function toggleGPIOCheckBox(element) {
-      var xhr = new XMLHttpRequest();
-      if(element.checked){ xhr.open("GET", "/update?output="+element.id+"&state=1", true); }
-      else { xhr.open("GET", "/update?output="+element.id+"&state=0", true); }
-            xhr.send();
-    }
-    </script>
-
-)rawliteral";
-
-const char gpioTemplate[] PROGMEM = R"rawliteral(
-          <li>
-            <section class="gpio-toggle-container">
-              <div class="width-1-2 match-align auto-center">
-                <h3 class="">GPIO {{number}}</h3>
-              </div>
-              <div class="width-1-2 match-align">
-                <p class="auto-center auto-margin input">Input</p>
-                <div class="checkbox">
-                  <input type="checkbox" id="{{number}}" onchange="toggleGPIOCheckBox(this)" />
-                  <label></label>
-                </div>
-                <p class="auto-center auto-margin output">Output</p>
-              </div>
-            </section>
-          </li>
 )rawliteral";
 
 const char index_html[] PROGMEM = R"rawliteral(
@@ -126,13 +83,6 @@ const char index_html[] PROGMEM = R"rawliteral(
     <div><input name="otaurl" id="otaurl" value='http://10.10.10.236:8081/nymea-owlet.ino.bin'></div>
     <div><button>Upgrade</button></div>
   </form>
-<script>function toggleCheckbox(element) {
-  var xhr = new XMLHttpRequest();
-  if(element.checked){ xhr.open("GET", "/update?output="+element.id+"&state=1", true); }
-  else { xhr.open("GET", "/update?output="+element.id+"&state=0", true); }
-        xhr.send();
-}
-</script>
 </body>
 </html>
 )rawliteral";
@@ -168,27 +118,6 @@ OwletWebServer::OwletWebServer(int port):
             request->send(501);
         }
     });
-    m_webServer.on("/update", HTTP_GET, [this] (AsyncWebServerRequest *request) {
-        String inputMessage1;
-        String inputMessage2;
-        // GET input1 value on <ESP_IP>/update?output=<inputMessage1>&state=<inputMessage2>
-        if (request->hasParam("output") && request->hasParam("state")) {
-            inputMessage1 = request->getParam("output")->value();
-            inputMessage2 = request->getParam("state")->value();
-            digitalWrite(inputMessage1.toInt(), inputMessage2.toInt());
-        }
-        else {
-            inputMessage1 = "No message sent";
-            inputMessage2 = "No message sent";
-        }
-        Serial.print("GPIO: ");
-        Serial.print(inputMessage1);
-        Serial.print(" - Set to: ");
-        Serial.println(inputMessage2);
-        request->send(200, "text/plain", "OK");
-
-        m_gpioController->setGPIOPower(inputMessage1.toInt(), inputMessage2.toInt());
-    });
     m_webServer.on("/ota", HTTP_GET, [this](AsyncWebServerRequest *request) {
         if (!request->hasParam("ota-url")) {
             Serial.println("Invalid OTA request. Update url missing.");
@@ -211,11 +140,6 @@ void OwletWebServer::begin()
     Serial.println("Webserver started");
 }
 
-void OwletWebServer::enableGPIOController(GPIOController *gpioController)
-{
-    m_gpioController = gpioController;
-}
-
 void OwletWebServer::enableWiFiManager(WiFiManager *wifiManager)
 {
     m_wifiManager = wifiManager;
@@ -228,13 +152,6 @@ void OwletWebServer::enableOTA(OTAManager *otaManager)
 
 String OwletWebServer::processor(const String& var){
     //Serial.println(var);
-    if(var == "BUTTONPLACEHOLDER"){
-        String buttons = "";
-        //    buttons += "<h4>Output - GPIO 2</h4><label class=\"switch\"><input type=\"checkbox\" onchange=\"toggleCheckbox(this)\" id=\"4\" " + outputState(4) + "><span class=\"slider\"></span></label>";
-        //    buttons += "<h4>Output - GPIO 4</h4><label class=\"switch\"><input type=\"checkbox\" onchange=\"toggleCheckbox(this)\" id=\"5\" " + outputState(5) + "><span class=\"slider\"></span></label>";
-        return buttons;
-    }
-
 
     if (var == "WIFICONFIGSECTION") {
         if (m_wifiManager) {
@@ -254,19 +171,6 @@ String OwletWebServer::processor(const String& var){
         }
     }
 
-    if (var == "GPIOCONTROLSECTION") {
-        if (m_gpioController) {
-            String ret(gpioSection);
-            String buttons;
-            for (int i = 0; i < m_gpioController->gpioCount(); i++) {
-                String button = gpioTemplate;
-                button.replace("{{number}}", String(i));
-                buttons += button;
-            }
-            ret.replace("{{buttons}}", buttons);
-            return ret;
-        }
-    }
     return String();
 }
 

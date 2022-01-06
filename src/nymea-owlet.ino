@@ -13,6 +13,7 @@
 
 #ifdef USE_M5STICKC
     #include "m5stickc/m5stickchelper.h"
+    M5StickCHelper m5StickCHelper;
 #endif
 
 #ifdef USE_WIFI
@@ -42,21 +43,16 @@ void setup() {
     Serial.begin(115200);
 //    printWelcome();
 
-#ifdef USE_M5STICKC
-    M5StickCHelper *m5StickCHelper = new M5StickCHelper();
-#endif
-
     Storage.begin();
 
 #ifdef USE_WIFI
     wifiManager.begin();
 
 #ifdef USE_M5STICKC
-    m5StickCHelper->updateIP(wifiManager.ip());
+    m5StickCHelper.updateIP(wifiManager.ip());
 #endif
 
     webServer.enableWiFiManager(&wifiManager);
-    webServer.enableGPIOController(&gpioController);
 
 #ifdef USE_OTA
     webServer.enableOTA(&otaManager);
