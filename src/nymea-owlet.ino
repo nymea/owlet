@@ -6,6 +6,7 @@
 
 #include "gpiocontroller.h"
 #include "platform.h"
+#include "localstorage.h"
 
 #include "api/apiserver.h"
 #include "api/gpiohandler.h"
@@ -35,19 +36,21 @@
 #define VERSION "0.0.1"
 
 GPIOController gpioController;
-
+APIServer apiServer;
 
 void setup() {
     Serial.begin(115200);
-    printWelcome();
+//    printWelcome();
 
 #ifdef USE_M5STICKC
     M5StickCHelper *m5StickCHelper = new M5StickCHelper();
 #endif
 
+    Storage.begin();
 
 #ifdef USE_WIFI
     wifiManager.begin();
+
 #ifdef USE_M5STICKC
     m5StickCHelper->updateIP(wifiManager.ip());
 #endif
@@ -64,15 +67,14 @@ void setup() {
     mdns.begin();
 #endif
 
-    APIServer *apiServer = new APIServer();
-    apiServer->registerHandler(new GPIOHandler(&gpioController));
+    apiServer.registerHandler(new GPIOHandler(&gpioController));
 
 #ifdef USE_OTA
-    apiServer->registerHandler(new OTAHandler());
+    apiServer.registerHandler(new OTAHandler());
 #endif
 
 #ifdef USE_WIFI
-    apiServer->registerTransport(new TcpTransport());
+    apiServer.registerTransport(new TcpTransport());
 #endif
 }
 
@@ -85,30 +87,27 @@ void loop()
 #endif
 
 #ifdef USE_WIFI
-     mdns.update();
+    wifiManager.loop();
+    mdns.update();
 #endif
 }
 
-
-void setupWebServer() {
-}
-
-void printWelcome() {
-    Serial.println("");
-    Serial.println("     .");
-    Serial.println("     ++,");
-    Serial.println("    |`--`+-.");
-    Serial.println("     ``--`-++. .;;+.");
-    Serial.println("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
-    Serial.println("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
-    Serial.println("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
-    Serial.println("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
-    Serial.println("          |+++#`                      __/ |           ");
-    Serial.println("          `###+.                     |___/            O W L E T");
-    Serial.print("           `###+                                      ");
-    Serial.println(VERSION);
-    Serial.println("             `#+");
-    Serial.println("               `");
-    Serial.println("");
-}
+//void printWelcome() {
+//    Serial.println("");
+//    Serial.println("     .");
+//    Serial.println("     ++,");
+//    Serial.println("    |`--`+-.");
+//    Serial.println("     ``--`-++. .;;+.");
+//    Serial.println("     \\``--*++++;;;/@\\          _ __  _   _ _ __ ___   ___  __ _");
+//    Serial.println("      \\`*#;.++++\\;+|/         | '_ \\| | | | '_ ` _ \\ / _ \\/ _` |");
+//    Serial.println("       `-###+++++;`           | | | | |_| | | | | | |  __/ (_| |");
+//    Serial.println("          /###+++             |_| |_|\\__, |_| |_| |_|\\___|\\__,_|");
+//    Serial.println("          |+++#`                      __/ |           ");
+//    Serial.println("          `###+.                     |___/            O W L E T");
+//    Serial.print("           `###+                                      ");
+//    Serial.println(VERSION);
+//    Serial.println("             `#+");
+//    Serial.println("               `");
+//    Serial.println("");
+//}
 

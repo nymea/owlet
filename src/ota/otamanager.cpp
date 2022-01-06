@@ -8,12 +8,12 @@
 #endif
 
 #ifdef ESP32
+
 class OTAManagerPrivate
 {
 public:
     String pendingOta;
     ESP32HTTPUpdate *ota;
-    WiFiClient *wifiClient;
 };
 
 #else
@@ -42,6 +42,7 @@ void OTAManager::update(const String &url)
 {
 #ifdef ESP32
     d->ota = new ESP32HTTPUpdate();
+    d->ota->rebootOnUpdate(true);
 #else
     d->ota = new ESP8266HTTPUpdate();
     d->ota->setLedPin(LED_BUILTIN, LOW);
@@ -71,7 +72,6 @@ void OTAManager::loop()
 {
     if (d->pendingOta != "") {
 #ifdef ESP32
-
         t_httpUpdate_return ret = d->ota->update(d->pendingOta);
 
         switch(ret) {
@@ -110,4 +110,7 @@ void OTAManager::loop()
         }
 #endif
     }
+
+
+
 }

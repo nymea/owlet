@@ -9,8 +9,12 @@ class LocalStorage
 public:
     LocalStorage();
 
-    static void store(const String &key, const JSONVar &value);
-    static JSONVar load(const String &configName);
+    void begin();
+
+    void store(const String &key, const JSONVar &value);
+    JSONVar load(const String &configName);
 };
+
+extern LocalStorage Storage;
 
 #endif // LOCALSTORAGE_H

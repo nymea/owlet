@@ -23,7 +23,7 @@ APIServer::~APIServer()
 void APIServer::registerTransport(Transport *transport)
 {
     transport->onConnect([=](void *thiz, OwletClient *client){
-        Serial.println(String("New client connected: "));// + client->remoteName());
+        Serial.println(String("New client connected: ") + client->remoteName());
         m_clients.add(client);
 
         client->onData(&dataHandler, this);

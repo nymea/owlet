@@ -15,6 +15,7 @@ public:
 
     void loop();
 
+
 private:
     OTAManagerPrivate *d;
 };

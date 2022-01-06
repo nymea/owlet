@@ -1,5 +1,6 @@
 #include "wifimanager.h"
 #include "localstorage.h"
+#include "platform.h"
 
 #include <Arduino.h>
 #ifdef ESP32
@@ -10,6 +11,9 @@
 
 #define TESTING_MODE 1
 
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
+
 WiFiManager::WiFiManager()
 {
 
@@ -17,6 +21,7 @@ WiFiManager::WiFiManager()
 
 void WiFiManager::configure(bool hostAP, const String &ssid, const String &password, bool reconnectNow)
 {
+    Serial.println("Configuring WiFi to SSID: " + ssid);
     WiFiConfig config;
     config.ap = hostAP;
     config.ssid = ssid;
@@ -40,18 +45,12 @@ void WiFiManager::begin()
     }
 
     if (!wifiConnected) {
-
-#ifndef TESTING_MODE
-        // For easier development,
-        //        WiFi.softAP(ap_ssid);
-
-#else
-        WiFiConfig config;
-        config.ssid = "Ice Cap Zone";
-        config.password = "Am Arsch die Raeuber";
-        connectToWiFi(config);
+        Platform platform;
+        String deviceId = platform.deviceId();
+        Serial.println("Device serial is: " + deviceId);
+        String wifiName = "nymea-owlet-" + deviceId.substring(deviceId.length() - 6, deviceId.length());
+        WiFi.softAP(wifiName.c_str());
     }
-#endif
 }
 
 WiFiManager::WiFiConfig WiFiManager::wifiConfig() const
@@ -62,6 +61,19 @@ WiFiManager::WiFiConfig WiFiManager::wifiConfig() const
 String WiFiManager::ip() const
 {
     return WiFi.localIP().toString();
+}
+
+void WiFiManager::loop()
+{
+    unsigned long currentMillis = millis();
+    // if WiFi is down, try reconnecting every CHECK_WIFI_TIME seconds
+    if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
+      Serial.print(millis());
+      Serial.println("Reconnecting to WiFi...");
+      WiFi.disconnect();
+      WiFi.reconnect();
+      previousMillis = currentMillis;
+    }
 }
 
 bool WiFiManager::connectToWiFi(WiFiConfig wifiConfig)
@@ -91,13 +103,16 @@ WiFiManager::WiFiConfig WiFiManager::loadWiFiConfig() const
     WiFiConfig config;
     config.valid = false;
 
-    JSONVar json = LocalStorage::load("wificonfig");
+    JSONVar json = Storage.load("wificonfig");
+
+    Serial.println("loaded wifi config");
 
     if (JSON.typeof(json) != "undefined") {
-        config.ap = (const char*)json["ap"] == "true";
-        const char *ssid = json["ssid"];
+        Serial.println("Have a WiFi config");
+        config.ap = json.hasOwnProperty("ap_mode") && json["ap_mode"];
+        const char *ssid = json.hasOwnProperty("ssid") ? json["ssid"] : "";
         config.ssid = ssid;
-        const char *password = json["password"];
+        const char *password = json.hasOwnProperty("password") ? json["password"] : "";
         config.password = password;
         Serial.println(String("Loaded wifi config: ") + (config.ap ? "AP" : "Client") + " SSID: " + config.ssid + ", Pass: " + config.password);
         config.valid = true;
@@ -115,5 +130,5 @@ void WiFiManager::storeWiFiConfig(WiFiConfig wifiConfig)
     json["ssid"] = wifiConfig.ssid;
     json["password"] = wifiConfig.password;
 
-    LocalStorage::store("wificonfig", json);
+    Storage.store("wificonfig", json);
 }

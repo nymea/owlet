@@ -24,6 +24,7 @@ public:
 
     String ip() const;
 
+    void loop();
 private:
 
     bool connectToWiFi(WiFiConfig wifiConfig);
