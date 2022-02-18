@@ -36,11 +36,12 @@ String Platform::type() const
     return "Arduino Uno";
 #elif defined ARDUINO_MINI_PRO
     return "Arduino Mini Pro";
+
 #endif 
     return "Unknown";
 }
 
 String Platform::firmwareVersion() const
 {
-    return FIRMWARE_VERSION;
+    return String(FIRMWARE_MAJOR + '.' + FIRMWARE_MINOR + '.' + FIRMWARE_PATCH);
 }

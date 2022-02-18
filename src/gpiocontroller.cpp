@@ -3,7 +3,7 @@
 
 GPIOController::GPIOController()
 {
-
+    
 }
 
 GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOController::PinMode mode)
