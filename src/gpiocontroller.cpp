@@ -37,12 +37,13 @@ GPIOController::GPIOError GPIOController::configurePin(uint8_t id, GPIOControlle
         }
 
         m_servos[id] = new Servo();
-        uint8_t channel = m_servos[id]->attach(id);
-        if (channel == INVALID_SERVO) {
-            delete m_servos[id];
-            m_servos.erase(id);
-            return GPIOErrorInvalidPin;
-        }
+        m_servos[id]->attach(id);
+        // uint8_t channel = m_servos[id]->attach(id);
+        // if (channel == INVALID_SERVO) {
+        //     delete m_servos[id];
+        //     m_servos.erase(id);
+        //     return GPIOErrorInvalidPin;
+        // }
         break;
     }
 #ifdef USE_WS2812FX
